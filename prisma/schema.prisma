@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// 1. Définition des états possibles
+enum Status {
+  INTENTION
+  REALISEE
+  AVORTEE
+}
+
+// 2. Table des dépenses et intentions
+model Intention {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  label     String
+  amount    Float
+  status    Status   @default(INTENTION)
+  emotion   String?
+}
+
+// 3. Table des statistiques et soldes (Le tableau de bord)
+model UserStats {
+  id                 String   @id @default(uuid())
+  realBalance        Float    @default(0)   // Argent actuel en poche
+  projectedBalance   Float    @default(0)   // Argent restant si les intentions sont réalisées
+  totalSaved         Float    @default(0)   // Cumul des économies (victoires)
+  desirsFreinesCount Int      @default(0)   // Nombre de fois où on a dit "non"
+  updatedAt          DateTime @updatedAt
+}
