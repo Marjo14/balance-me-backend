@@ -1,4 +1,5 @@
-const { calculateNewBalances } = require('./financeLogic');
+
+const { calculateNewBalances } = require('./financeLogic'); 
 
 test('Créer une intention de 100€ doit baisser le solde projeté mais pas le réel', () => {
   const initialStats = { realBalance: 1000, projectedBalance: 1000, totalSaved: 0, desirsFreinesCount: 0 };

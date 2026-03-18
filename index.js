@@ -1,34 +1,13 @@
 const express = require('express');
-const { PrismaClient } = require('@prisma/client');
+const intentionRoutes = require('./src/routes/intentionRoutes');
 
 const app = express();
-const prisma = new PrismaClient();
-const PORT = 3000;
-
 app.use(express.json());
 
-// 1. Route de test simple
-app.get('/', (req, res) => {
-  res.send('🚀 Serveur BalanceMe opérationnel !');
-});
+// Main Routes Entry Point
+app.use('/intentions', intentionRoutes);
 
-// 2. Route pour tester la création d'une intention dans Supabase
-app.post('/test-add', async (req, res) => {
-  try {
-    const nouvelleIntention = await prisma.intention.create({
-      data: {
-        label: "Café test",
-        amount: 3.50,
-        status: "INTENTION",
-        emotion: "Envie matinale"
-      }
-    });
-    res.json({ message: "Succès !", data: nouvelleIntention });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`✅ Serveur lancé sur http://localhost:${PORT}`);
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
