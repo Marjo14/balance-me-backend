@@ -78,7 +78,7 @@ app.get('/', (req, res) => {
   res.send(`<h1>BalanceMe API is Live</h1><p>Check the <a href="/api-docs">Interactive Swagger Documentation</a>.</p>`);
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on http://localhost:${PORT}`);
   console.log(`📖 API Documentation: http://localhost:${PORT}/api-docs`);
