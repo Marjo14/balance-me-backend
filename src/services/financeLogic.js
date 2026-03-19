@@ -25,7 +25,7 @@ function calculateNewBalances(currentStats, amount, action) {
       desirsFreinesCount += 1;
       break;
 
-    case 'REALISE':
+    case 'REALIZE':
       // TRANSACTION: The purchase is confirmed. Real money is now deducted from the account.
       // The projected balance was already adjusted during the 'CREATE' phase.
       realBalance -= amount;

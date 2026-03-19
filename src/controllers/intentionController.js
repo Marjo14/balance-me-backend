@@ -109,3 +109,36 @@ exports.abortIntention = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
+// Check that the name is EXACTLY "getUserStats"
+exports.getUserStats = async (req, res) => {
+  try {
+    const stats = await prisma.userStats.findFirst();
+    if (!stats) return res.status(404).json({ error: "Stats not found." });
+    res.json(stats);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Function to list all intentions (to see IDs and amounts)
+exports.getAllIntentions = async (req, res) => {
+  try {
+    const intentions = await prisma.intention.findMany({
+      orderBy: { createdAt: 'desc' } // Les plus récentes en premier
+    });
+    res.json(intentions);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.deleteIntention = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await prisma.intention.delete({ where: { id } });
+    res.json({ message: "Intention supprimée avec succès." });
+  } catch (error) {
+    res.status(404).json({ error: "Intention non trouvée." });
+  }
+};
