@@ -33,13 +33,42 @@ C'est ici que se joue la valeur ajoutée du projet. Nous gérons trois compteurs
 
 ## 3. Matrice de Transition des États
 Pourquoi utiliser un `Enum` ? Pour garantir l'intégrité de cet algorithme :
+# 📊 Modélisation & Endpoints
 
-| Action | Statut | Impact `realBalance` | Impact `projectedBalance` | Impact `totalSaved` |
-| :--- | :--- | :--- | :--- | :--- |
-| **Créer** | `INTENTION` | 0 (Stable) | - Montant | 0 |
-| **Confirmer** | `REALISEE` | - Montant | 0 (Déjà déduit) | 0 |
-| **Renoncer** | `AVORTEE` | 0 (Sauvé) | + Montant (Retour) | + Montant |
+### Table `Intention`
+| Champ | Type | Description |
+| :--- | :--- | :--- |
+| `label` | String | Nom de l'article/envie |
+| `amount` | Float | Prix de l'article |
+| `status` | Enum | `INTENTION`, `REALISEE`, `AVORTEE` |
+| `emotion` | String | Sentiment associé à l'envie |
 
+### Table `UserStats`
+| Champ | Type | Description |
+| :--- | :--- | :--- |
+| `realBalance` | Float | Argent réellement disponible |
+| `projectedBalance` | Float | Solde si toutes les intentions sont achetées |
+| `totalSaved` | Float | Cumul des économies via les intentions avortées |
+
+---
+
+## 📡 Points d'entrée (API REST)
+
+| Méthode | Route | Description |
+| :--- | :--- | :--- |
+| `GET` | `/intentions` | Liste toutes les intentions d'achat |
+| `POST` | `/intentions` | Crée une intention (impacte `projectedBalance`) |
+| `PUT` | `/intentions/{id}/realize` | Marque comme réalisé (impacte `realBalance`) |
+| `PUT` | `/intentions/{id}/abort` | Annule l'achat (incrémente `totalSaved`) |
+| `GET` | `/intentions/stats` | Récupère le tableau de bord financier |
+
+---
+
+## 🔐 Configuration de Production
+Le projet utilise des variables d'environnement sécurisées sur Render :
+- **DATABASE_URL** : Connexion optimisée via le Pooler de Supabase (Port 6543).
+- **DIRECT_URL** : Connexion directe pour les migrations Prisma (Port 5432).
+- **PORT** : Injecté dynamiquement par l'hôte.
 ---
 
 ## 4. Choix Techniques Justifiés
