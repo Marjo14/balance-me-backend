@@ -15,7 +15,17 @@ const swaggerOptions = {
       version: '1.0.0',
       description: 'Frugality management API with a Reward system logic',
     },
-    servers: [{ url: 'http://localhost:3000', description: 'Local Development Server' }],
+    
+    servers: [
+      { 
+        url: 'https://balance-me-backend.onrender.com', 
+        description: 'Production Server (Render)' 
+      },
+      { 
+        url: 'http://localhost:8080', 
+        description: 'Local Development Server' 
+      }
+    ],
     paths: {
       '/intentions': {
         get: {
@@ -28,7 +38,18 @@ const swaggerOptions = {
           tags: ['Intentions'],
           requestBody: {
             required: true,
-            content: { 'application/json': { schema: { type: 'object', properties: { label: { type: 'string' }, amount: { type: 'number' }, emotion: { type: 'string' } } } } }
+            content: { 
+              'application/json': { 
+                schema: { 
+                  type: 'object', 
+                  properties: { 
+                    label: { type: 'string' }, 
+                    amount: { type: 'number' }, 
+                    emotion: { type: 'string' } 
+                  } 
+                } 
+              } 
+            }
           },
           responses: { 201: { description: 'Created' } }
         }
@@ -78,8 +99,9 @@ app.get('/', (req, res) => {
   res.send(`<h1>BalanceMe API is Live</h1><p>Check the <a href="/api-docs">Interactive Swagger Documentation</a>.</p>`);
 });
 
+
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-  console.log(`🚀 Server is running on http://localhost:${PORT}`);
-  console.log(`📖 API Documentation: http://localhost:${PORT}/api-docs`);
+  console.log(`🚀 Server is running on port ${PORT}`);
+  console.log(`📖 API Documentation: https://balance-me-backend.onrender.com/api-docs`);
 });
