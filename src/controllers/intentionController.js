@@ -3,54 +3,66 @@ const { calculateNewBalances } = require('../services/financeLogic');
 
 const prisma = new PrismaClient();
 
-// Logic to handle creating an intention
+/**
+ * Handle creating a new financial intention
+ */
 exports.createIntention = async (req, res) => {
   const { label, amount, emotion } = req.body;
+  const userId = req.user.id; // Retrieved via auth middleware
 
   try {
     const result = await prisma.$transaction(async (tx) => {
-      // 1. Fetch current statistics
-      const currentStats = await tx.userStats.findFirst();
+      // 1. Fetch or initialize statistics for this specific user
+      let currentStats = await tx.userStats.findUnique({ where: { userId } });
+      
       if (!currentStats) {
-        throw new Error("Account not initialized.");
+        currentStats = await tx.userStats.create({
+          data: { 
+            userId, 
+            realBalance: 1000, 
+            projectedBalance: 1000 
+          } 
+        });
       }
 
-      // 2. Business logic
+      // 2. Business logic calculation
       const updatedData = calculateNewBalances(currentStats, amount, 'CREATE');
 
       // 3. Database operations
       const newIntention = await tx.intention.create({
-        data: { label, amount, status: 'INTENTION', emotion }
+        data: { label, amount, status: 'INTENTION', emotion, userId }
       });
 
       const updatedStats = await tx.userStats.update({
-        where: { id: currentStats.id },
+        where: { userId },
         data: { projectedBalance: updatedData.projectedBalance }
       });
 
       return { newIntention, updatedStats };
     });
 
-    res.status(201).json({ message: "Intention recorded!", data: result });
+    res.status(201).json({ message: "Intention successfully recorded!", data: result });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-// Function to CONFIRM the expense (REALIZE)
+/**
+ * Confirm and realize an expense
+ */
 exports.realizeIntention = async (req, res) => {
-  const { id } = req.params; // We get the ID from the URL
+  const { id } = req.params;
+  const userId = req.user.id;
 
   try {
     const result = await prisma.$transaction(async (tx) => {
-      const intention = await tx.intention.findUnique({ where: { id } });
-      const currentStats = await tx.userStats.findFirst();
+      const intention = await tx.intention.findFirst({ where: { id, userId } });
+      const currentStats = await tx.userStats.findUnique({ where: { userId } });
 
       if (!intention || intention.status !== 'INTENTION') {
         throw new Error("Intention not found or already processed.");
       }
 
-      // Logic: Real balance decreases to match the projection
       const updatedData = calculateNewBalances(currentStats, intention.amount, 'REALIZE');
 
       const updatedIntention = await tx.intention.update({
@@ -59,33 +71,35 @@ exports.realizeIntention = async (req, res) => {
       });
 
       const updatedStats = await tx.userStats.update({
-        where: { id: currentStats.id },
+        where: { userId },
         data: { realBalance: updatedData.realBalance }
       });
 
       return { updatedIntention, updatedStats };
     });
 
-    res.json({ message: "Expense realized!", data: result });
+    res.json({ message: "Expense realized successfully!", data: result });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
 
-// Function to CANCEL the expense (ABORT = Victory)
+/**
+ * Abort an intention (Financial Victory)
+ */
 exports.abortIntention = async (req, res) => {
   const { id } = req.params;
+  const userId = req.user.id;
 
   try {
     const result = await prisma.$transaction(async (tx) => {
-      const intention = await tx.intention.findUnique({ where: { id } });
-      const currentStats = await tx.userStats.findFirst();
+      const intention = await tx.intention.findFirst({ where: { id, userId } });
+      const currentStats = await tx.userStats.findUnique({ where: { userId } });
 
       if (!intention || intention.status !== 'INTENTION') {
-        throw new Error("Intention not found.");
+        throw new Error("Intention not found or invalid status.");
       }
 
-      // Logic: Projected balance goes back up + savings increase
       const updatedData = calculateNewBalances(currentStats, intention.amount, 'ABORT');
 
       const updatedIntention = await tx.intention.update({
@@ -94,7 +108,7 @@ exports.abortIntention = async (req, res) => {
       });
 
       const updatedStats = await tx.userStats.update({
-        where: { id: currentStats.id },
+        where: { userId },
         data: { 
           projectedBalance: updatedData.projectedBalance,
           totalSaved: updatedData.totalSaved 
@@ -110,22 +124,29 @@ exports.abortIntention = async (req, res) => {
   }
 };
 
-// Check that the name is EXACTLY "getUserStats"
+/**
+ * Retrieve current user financial statistics
+ */
 exports.getUserStats = async (req, res) => {
   try {
-    const stats = await prisma.userStats.findFirst();
-    if (!stats) return res.status(404).json({ error: "Stats not found." });
+    const stats = await prisma.userStats.findUnique({ 
+        where: { userId: req.user.id } 
+    });
+    if (!stats) return res.status(404).json({ error: "Statistics not found for this user." });
     res.json(stats);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-// Function to list all intentions (to see IDs and amounts)
+/**
+ * List all intentions for the authenticated user
+ */
 exports.getAllIntentions = async (req, res) => {
   try {
     const intentions = await prisma.intention.findMany({
-      orderBy: { createdAt: 'desc' } // Les plus récentes en premier
+      where: { userId: req.user.id }, 
+      orderBy: { createdAt: 'desc' }
     });
     res.json(intentions);
   } catch (error) {
@@ -133,12 +154,17 @@ exports.getAllIntentions = async (req, res) => {
   }
 };
 
+/**
+ * Delete a specific intention
+ */
 exports.deleteIntention = async (req, res) => {
   const { id } = req.params;
   try {
-    await prisma.intention.delete({ where: { id } });
-    res.json({ message: "Intention supprimée avec succès." });
+    await prisma.intention.delete({ 
+        where: { id, userId: req.user.id } 
+    });
+    res.json({ message: "Intention deleted successfully." });
   } catch (error) {
-    res.status(404).json({ error: "Intention non trouvée." });
+    res.status(404).json({ error: "Intention not found or unauthorized." });
   }
 };

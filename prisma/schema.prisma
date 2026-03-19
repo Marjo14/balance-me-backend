@@ -8,14 +8,25 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// 1. Définition des états possibles
 enum Status {
   INTENTION
   REALISEE
   AVORTEE
 }
 
-// 2. Table des dépenses et intentions
+// 1. La table User (Profil local lié à Supabase)
+model User {
+  // L'id sera l'UUID envoyé par Supabase Auth
+  id        String   @id
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  // Relations
+  intentions Intention[]
+  stats      UserStats?
+}
+
+// 2. Table des dépenses (liée à l'utilisateur)
 model Intention {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
@@ -23,14 +34,22 @@ model Intention {
   amount    Float
   status    Status   @default(INTENTION)
   emotion   String?
+
+  // Lien avec l'utilisateur
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
 }
 
-// 3. Table des statistiques et soldes (Le tableau de bord)
+// 3. Table des statistiques (liée à l'utilisateur)
 model UserStats {
   id                 String   @id @default(uuid())
-  realBalance        Float    @default(0)   // Argent actuel en poche
-  projectedBalance   Float    @default(0)   // Argent restant si les intentions sont réalisées
-  totalSaved         Float    @default(0)   // Cumul des économies (victoires)
-  desirsFreinesCount Int      @default(0)   // Nombre de fois où on a dit "non"
+  realBalance        Float    @default(0)
+  projectedBalance   Float    @default(0)
+  totalSaved         Float    @default(0)
+  desirsFreinesCount Int      @default(0)
   updatedAt          DateTime @updatedAt
+
+  // Lien 1-à-1 avec l'utilisateur
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id])
 }
