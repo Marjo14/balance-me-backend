@@ -36,3 +36,76 @@ exports.createIntention = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// Function to CONFIRM the expense (REALIZE)
+exports.realizeIntention = async (req, res) => {
+  const { id } = req.params; // We get the ID from the URL
+
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      const intention = await tx.intention.findUnique({ where: { id } });
+      const currentStats = await tx.userStats.findFirst();
+
+      if (!intention || intention.status !== 'INTENTION') {
+        throw new Error("Intention not found or already processed.");
+      }
+
+      // Logic: Real balance decreases to match the projection
+      const updatedData = calculateNewBalances(currentStats, intention.amount, 'REALIZE');
+
+      const updatedIntention = await tx.intention.update({
+        where: { id },
+        data: { status: 'REALISEE' }
+      });
+
+      const updatedStats = await tx.userStats.update({
+        where: { id: currentStats.id },
+        data: { realBalance: updatedData.realBalance }
+      });
+
+      return { updatedIntention, updatedStats };
+    });
+
+    res.json({ message: "Expense realized!", data: result });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+// Function to CANCEL the expense (ABORT = Victory)
+exports.abortIntention = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      const intention = await tx.intention.findUnique({ where: { id } });
+      const currentStats = await tx.userStats.findFirst();
+
+      if (!intention || intention.status !== 'INTENTION') {
+        throw new Error("Intention not found.");
+      }
+
+      // Logic: Projected balance goes back up + savings increase
+      const updatedData = calculateNewBalances(currentStats, intention.amount, 'ABORT');
+
+      const updatedIntention = await tx.intention.update({
+        where: { id },
+        data: { status: 'AVORTEE' }
+      });
+
+      const updatedStats = await tx.userStats.update({
+        where: { id: currentStats.id },
+        data: { 
+          projectedBalance: updatedData.projectedBalance,
+          totalSaved: updatedData.totalSaved 
+        }
+      });
+
+      return { updatedIntention, updatedStats };
+    });
+
+    res.json({ message: "Victory recorded! Savings updated.", data: result });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
