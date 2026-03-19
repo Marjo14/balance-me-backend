@@ -21,6 +21,7 @@ Le cœur de l'application repose sur le cycle de vie d'une dépense :
 * **Base de données** : PostgreSQL (via **Supabase**)
 * **Hébergement** : **Render** (Cloud Frankfurt)
 * **CI/CD** : Déploiement automatique via GitHub
+- **Testing:** Jest (TDD Approach)
 
 ---
 
