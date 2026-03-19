@@ -36,6 +36,9 @@ Le cœur de l'application repose sur le cycle de vie d'une dépense :
 
 ### 📊 Database Schema (Entity Relationship Diagram)
 
+```markdown
+### 📊 Database Schema (Entity Relationship Diagram)
+
 ```mermaid
 erDiagram
     USER ||--|| USER_STATS : "has"
@@ -66,6 +69,7 @@ erDiagram
         string state "INTENTION | RÉALISÉE | AVORTÉE"
         datetime createdAt
     }
+```
 
 ## 📅 Journal de Bord (MVP)
 
