@@ -26,9 +26,10 @@ Le cœur de l'application repose sur le cycle de vie d'une dépense :
 
 ## ⚙️ Installation locale
 1. `npm install`
-2. Configurer le fichier `.env` avec `DATABASE_URL` et `DIRECT_URL`.
-3. `npx prisma generate`
-4. `node index.js` (Serveur sur le port 8080)
+2. `npx jest`
+3. Configurer le fichier `.env` avec `DATABASE_URL` et `DIRECT_URL`.
+4. `npx prisma generate`
+5. `node index.js` (Serveur sur le port 8080)
 
 ---
 
