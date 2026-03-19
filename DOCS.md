@@ -31,7 +31,44 @@ C'est ici que se joue la valeur ajoutée du projet. Nous gérons trois compteurs
 
 ---
 
-## 3. Matrice de Transition des États
+## 3. Modélisation de la Donnée (ERD)
+
+Le schéma suivant représente l'organisation des tables et leurs relations (PostgreSQL/Supabase).
+
+```mermaid
+erDiagram
+    USER ||--|| USER_STATS : "possède"
+    USER ||--o{ INTENTION : "crée"
+    
+    USER {
+        string id PK
+        string email
+        string password
+        datetime createdAt
+    }
+
+    USER_STATS {
+        string id PK
+        string userId FK
+        float realBalance
+        float projectedBalance
+        float totalSaved
+        int desirsFreinesCount
+        datetime updatedAt
+    }
+
+    INTENTION {
+        string id PK
+        string userId FK
+        string label
+        float amount
+        string state "INTENTION | RÉALISÉE | AVORTÉE"
+        string emotion "Optionnel"
+        datetime createdAt
+    }
+```
+
+## 4. Matrice de Transition des États
 Pourquoi utiliser un `Enum` ? Pour garantir l'intégrité de cet algorithme :
 # 📊 Modélisation & Endpoints
 
@@ -71,7 +108,7 @@ Le projet utilise des variables d'environnement sécurisées sur Render :
 - **PORT** : Injecté dynamiquement par l'hôte.
 ---
 
-## 4. Choix Techniques Justifiés
+## 5. Choix Techniques Justifiés
 * **UUID pour les IDs** : Sécurité accrue. On ne peut pas deviner l'ID d'une dépense en changeant juste un chiffre dans l'URL.
 * **Prisma Enum** : Empêche l'injection de statuts fantaisistes qui casseraient les calculs de balance.
 * **Table UserStats Unique** : Centralisation des compteurs pour éviter de recalculer des milliers de lignes de transactions à chaque appel du Dashboard (Optimisation des performances).
