@@ -1,0 +1,63 @@
+/**
+ * ⚖️ BalanceMe Business Logic (DDD)
+ * Test Suite for the Reward System logic
+ */
+
+// 1. BUSINESS LOGIC (Domain-Driven Design)
+const calculateProjectedBalance = (currentBalance, intentionAmount) => {
+  // Business Rule: Users cannot plan to spend more than their current real balance
+  if (intentionAmount > currentBalance) {
+    throw new Error('Insufficient funds for this intention');
+  }
+  return currentBalance - intentionAmount;
+};
+
+const calculateAbortVictory = (projectedBalance, intentionAmount) => {
+  return projectedBalance + intentionAmount;
+};
+
+const calculateRealBalanceAfterPurchase = (currentRealBalance, intentionAmount) => {
+  return currentRealBalance - intentionAmount;
+};
+
+// 2. TEST SUITE (TDD Verification)
+describe('BalanceMe Core Logic (TDD Cycle)', () => {
+
+  test('Creating an intention SHOULD decrease the projected balance', () => {
+    const initialBalance = 1000;
+    const intentionAmount = 150;
+    const result = calculateProjectedBalance(initialBalance, intentionAmount);
+    
+    expect(result).toBe(850);
+  });
+
+  test('Aborting an intention (Victory) SHOULD restore the projected balance', () => {
+    const projectedBalance = 850;
+    const intentionAmount = 150;
+    const result = calculateAbortVictory(projectedBalance, intentionAmount);
+    
+    expect(result).toBe(1000);
+  });
+
+  test('Realizing an intention SHOULD decrease the real balance', () => {
+    const realBalance = 1000;
+    const intentionAmount = 150;
+    const result = calculateRealBalanceAfterPurchase(realBalance, intentionAmount);
+    
+    expect(result).toBe(850);
+  });
+
+  /**
+   * 🥊 EDGE CASE CHALLENGE (TDD Proof)
+   * This test validates the core financial safety rule
+   */
+  test('Creating an intention GREATER than real balance SHOULD throw an error', () => {
+    const realBalance = 100;
+    const intentionAmount = 150;
+    
+    expect(() => {
+      calculateProjectedBalance(realBalance, intentionAmount);
+    }).toThrow('Insufficient funds for this intention');
+  });
+
+});
